@@ -3,32 +3,32 @@ import { css } from "@emotion/react";
 export const layout = (isShow) => css`
     box-sizing: border-box;
     position: fixed;
-    top: 0;
-    left: ${isShow ? "0px" : "-300px"};
+    top: ${isShow ? "0px" : "-80px"};
+    right: 0;
     z-index: 99;
-    border-right: 1px solid #dbdbdb;
-    width: 300px;
-    height: 100%;
-    transition: left 0.5s ease-in-out;
+    border: 1px solid #dbdbdb;
+    border-top: 0px;
+    width: 50%;
+    height: 80px;
+    transition: top 0.5s ease-in-out;
     background-color: white;
-    box-shadow: 1px 0px 2px #00000022;
+    box-shadow: 0px 1px 2px #00000022;
 `;
 
 export const toggleButton = css`
     box-sizing: border-box;
     position: absolute;
-    transform: translateY(-50%);
-    top: 50%;
-    right: -15px;
+    bottom: -15px;
+    right: 10px;
     display: flex;
     justify-content: center;
     align-items: center;
     padding: 0;
     border: 1px solid #dbdbdb;
-    border-top-right-radius: 8px;
+    border-bottom-left-radius: 8px;
     border-bottom-right-radius: 8px;
-    width: 15px;
-    height: 50px;
+    width: 50px;
+    height: 15px;
     background-color: white;
     cursor: pointer;
     &:hover {
@@ -41,9 +41,10 @@ export const toggleButton = css`
 
 export const menuList = css`
     display: flex;
-    flex-direction: column;
+    justify-content: center;
     align-items: center;
-    padding: 20px 0px;
+    width: 100%;
+    height: 100%;
 `;
 
 export const menuItem = css`
@@ -51,17 +52,14 @@ export const menuItem = css`
     display: flex;
     justify-content: center;
     align-items: center;
-
-    border-bottom: 1px solid #dbdbdb;
-    width: 100%;
+    margin: 0px 10px;
+    border: 1px solid #dbdbdb;
+    width: 200px;
     height: 50px;
     color: black;
     font-weight: 600;
     text-decoration: none;
     cursor: pointer;
-    &:nth-of-type(1) {
-        border-top: 1px solid #dbdbdb;
-    }
     &:hover {
         background-color: #eee;
     }
