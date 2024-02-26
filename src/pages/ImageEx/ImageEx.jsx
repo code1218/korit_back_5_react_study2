@@ -1,10 +1,10 @@
 /** @jsxImportSource @emotion/react */
 import { css } from "@emotion/react";
-import { getStorage, ref, uploadBytesResumable } from "firebase/storage";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { getDownloadURL, ref, uploadBytesResumable } from "firebase/storage";
+import { useEffect, useRef, useState } from "react";
 import { storage } from "../../configs/firebase/firebaseConfig";
 import { Line } from "rc-progress";
-// import { app } from "../../configs/firebase/firebaseConfig";
+import { v4 as uuid } from "uuid"
 
 const layout = css`
     display: flex;
@@ -28,57 +28,107 @@ const imageLayout = css`
 `;
 
 function ImageEx() {
-
-    const [ uploadFiles, setUploadFiles ] = useState([]);
-    const [ previews, setPreviews ] = useState([]);
-    const [ progressPercent, setProgressPercent ] = useState(0);
+    const uploadFilesId = useRef(0);
+    const [ oldFiles, setOldFiles ] = useState([]);
+    const [ newFiles, setNewFiles ] = useState([]);
     const imgFileRef = useRef();
 
-    const handleFileChange = (e) => {
-        const files = Array.from(e.target.files);
+    useEffect(() => {
+        setOldFiles(!localStorage.getItem("oldFiles") ? [] : JSON.parse(localStorage.getItem("oldFiles")));
+    }, []);
 
-        if(files.length === 0) {
+    const handleFileChange = (e) => {
+        const loadFiles = Array.from(e.target.files);
+
+        if(loadFiles.length === 0) {
             imgFileRef.current.value = "";
             return;
         }
 
-        setUploadFiles(files);
+        const uploadFiles = loadFiles.map(file => {
+            return {
+                id: uploadFilesId.current += 1,
+                progressPercent: 0,
+                originFile: file,
+                url: ""
+            };
+        });
+
+        uploadFilesId.current = 0;
 
         let promises = [];
 
-        promises = files.map(file => new Promise((resolve) => {
+        promises = uploadFiles.map(file => new Promise((resolve) => {
             const fileReader = new FileReader();
 
             fileReader.onload = (e) => {
                 resolve(e.target.result);
             }
 
-            fileReader.readAsDataURL(file);
+            fileReader.readAsDataURL(file.originFile);
         }));
 
         Promise.all(promises)
         .then(result => {
-            setPreviews(result);
+            setNewFiles(result.map((dataUrl, index) => {
+                return {
+                    ...uploadFiles[index],
+                    preview: dataUrl
+                };
+            }));
         });        
     }
 
     const handleImageUpload = () => {
-        const file = uploadFiles[0];
-        console.log(uploadFiles);
-        const storageRef = ref(storage, `files/test/${file.name}`);
-        const uploadTask = uploadBytesResumable(storageRef, file);
+        const promises = newFiles.map(file => new Promise(resolve => {
+            const storageRef = ref(storage, `files/test/${uuid()}_${file.originFile.name}`);
+            const uploadTask = uploadBytesResumable(storageRef, file.originFile);
 
-        uploadTask.on();
+            uploadTask.on(
+                "state_changed",
+                (snapshot) => {
+                    setNewFiles(newFiles.map(sFile => {
+                        return sFile.id !== file.id ? sFile : {
+                            ...sFile, 
+                            percent: Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100)
+                        }
+                    }));
+                },
+                (error) => {},
+                () => {
+                    getDownloadURL(storageRef).then(url => {
+                        const newFile = {
+                            ...file,
+                            ["url"]: url
+                        }
+                        resolve(newFile);
+                    })
+                }
+            );
+        }));
+
+        Promise.all(promises)
+        .then((newFile) => {
+            setOldFiles(newFile);
+            localStorage.setItem("oldFiles", JSON.stringify(newFile));
+        }).then(() => {
+            setNewFiles([]);
+        });
     }
 
     return (
         <div css={layout}>
-            {previews.map((preview, index) => 
+            {oldFiles?.map(file => 
+                <div key={file.id} css={imageLayout}>
+                    <img src={file.url} alt="" />
+                </div>
+            )}
+            {newFiles?.map(file => 
                 <>
-                    <div key={index} css={imageLayout}>
-                        <img src={preview} alt="" />
+                    <div key={file.id} css={imageLayout}>
+                        <img src={file.preview} alt="" />
                     </div>
-                    <Line percent={progressPercent} strokeWidth={4} strokeColor={"#22222"}/>
+                    <Line percent={file.percent} strokeWidth={4} strokeColor={"#dbdbdb"}/>
                 </>
             )}
             
