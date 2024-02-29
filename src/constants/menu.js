@@ -1,3 +1,6 @@
+import BoardEx from "../pages/BoardEx/BoardEx";
+import BoardList from "../pages/BoardList/BoardList";
+import BoardWrite from "../pages/BoardWrite/BoardWrite";
 import ImageEx from "../pages/ImageEx/ImageEx";
 import ImageEx2 from "../pages/ImageEx2/ImageEx2";
 import ImageEx3 from "../pages/ImageEx3/ImageEx3";
@@ -39,5 +42,20 @@ export const MENUS = [
         path: "/image/ex3",
         name: "이미지 여러개 불러오기",
         element: <ImageEx3 />
+    },
+    {
+        id: 7,
+        path: "/board/write",
+        name: "게시글 작성",
+        element: <BoardWrite />
+    },
+    {
+        id: 8,
+        path: "/board/list",
+        params: {
+            page: 1,
+        },
+        name: "게시글 목록",
+        element: <BoardList />
     }
 ];

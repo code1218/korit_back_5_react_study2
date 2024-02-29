@@ -72,6 +72,7 @@ function ImageEx3() {
 
         Promise.all(promises)
         .then(result => {
+            console.log(result)
             setLoadImages(result);
         });
     }
